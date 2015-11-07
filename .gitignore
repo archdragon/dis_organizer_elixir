@@ -1,0 +1,8 @@
+/_build
+/deps
+*secrets.ex
+erl_crash.dump
+*.ez
+*.swo
+*.swp
+*.env
