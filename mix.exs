@@ -16,7 +16,7 @@ defmodule Disorganizer.Mixfile do
   def application do
     [
       mod: {Disorganizer, []},
-      applications: [:logger, :httpotion],
+      applications: [:logger, :httpotion, :calendar],
       env: []
     ]
   end
@@ -34,7 +34,8 @@ defmodule Disorganizer.Mixfile do
     [
       {:ibrowse, github: "cmullaparthi/ibrowse", tag: "v4.1.2"},
       {:httpotion, "~> 2.1.0"},
-      {:poison, "~> 1.5"}
+      {:poison, "~> 1.5"},
+      {:calendar, "~> 0.11.1"}
     ]
   end
 end

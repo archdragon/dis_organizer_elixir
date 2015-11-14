@@ -3,7 +3,6 @@ defmodule Disorganizer.WebConnector do
   use GenServer
 
   def init(_) do
-    IO.puts "Starting WebConnector"
     {:ok, []}
   end
 
@@ -12,7 +11,6 @@ defmodule Disorganizer.WebConnector do
   end
 
   def start_link(state, opts) do
-    IO.puts "Starting WebConnector link"
     GenServer.start_link(__MODULE__, state, opts)
   end
 
