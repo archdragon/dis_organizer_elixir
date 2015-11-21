@@ -14,9 +14,11 @@ defmodule Disorganizer.WebConnector do
     GenServer.start_link(__MODULE__, state, opts)
   end
 
-  def handle_call({:get, service}, _from, state) do
-     response = HTTPotion.get service.url, service.options
-     {:reply, service.to_html(response), state}
+  def handle_call({:get, service, settings}, _from, state) do
+     url = service.url(settings)
+     options = service.options(settings)
+     response = HTTPotion.get url, options
+     {:reply, service.collection(response), state}
   end
 
   def handle_call({:post, service, message}, _from, state) do

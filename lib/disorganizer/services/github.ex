@@ -2,7 +2,7 @@ defmodule Disorganizer.Services.Github do
   use Application
   use Calendar
 
-  def url do
+  def url(settings) do
     repo_addr = Application.get_env(:disorganizer, :github_repo_addr)
     "https://api.github.com/repos/" <> repo_addr <> "/pulls"
   end

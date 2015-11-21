@@ -21,26 +21,13 @@ defmodule Disorganizer.Bot do
 
     bot_link = GenServer.start_link(__MODULE__, [], [])
 
-    perform(super_pid)
+    run(super_pid)
 
     bot_link
   end
 
-  defp apply_policies(children) do
-    [
-      {_, pivotal_pid, _, _},
-      {_, github_pid,  _, _},
-      {_, hipchat_pid, _, _},
-      {_, rollbar_pid, _, _},
-      {_, slack_pid, _, _}
-    ] = children
-  end
-
-  defp send_messages do
-  end
-
-  defp perform(super_pid) do
-    IO.puts "Running Bot Actions..."
+  defp run(super_pid) do
+    IO.puts "Running main bot loop..."
 
     [
       {_, pivotal_pid, _, _},
@@ -50,20 +37,64 @@ defmodule Disorganizer.Bot do
       {_, slack_pid, _, _}
     ] = Supervisor.which_children(super_pid)
 
-    # Supervisor.which_children(super_pid)
-    # |> apply_policies
-    # |> send_messages
+    pids = %{
+      pivotal_pid: pivotal_pid,
+      github_pid: github_pid,
+      hipchat_pid: hipchat_pid,
+      rollbar_pid: rollbar_pid,
+      slack_pid: slack_pid
+    }
 
-    message1 = GenServer.call(pivotal_pid, {:get, Disorganizer.Services.Pivotal})
-    message2 = GenServer.call(github_pid, {:get, Disorganizer.Services.Github})
-    message3 = GenServer.call(rollbar_pid, {:get, Disorganizer.Services.Rollbar})
+    pids
+    |> apply_policies([
+      Disorganizer.Policies.OldStories
+    ])
+    |> send_messages(pids)
 
-    hipchat_status = GenServer.call(hipchat_pid, {:post, Disorganizer.Services.Hipchat, message2})
-    slack_status = GenServer.call(slack_pid, {:post, Disorganizer.Services.Slack, message2})
+    # message2 = GenServer.call(github_pid, {:get, Disorganizer.Services.Github})
+    # message3 = GenServer.call(rollbar_pid, {:get, Disorganizer.Services.Rollbar})
+
+    # hipchat_status = GenServer.call(hipchat_pid, {:post, Disorganizer.Services.Hipchat, message2})
+    # slack_status = GenServer.call(slack_pid, {:post, Disorganizer.Services.Slack, message2})
 
     :timer.sleep(@interval)
 
-    perform(super_pid)
+    run(super_pid)
+  end
+
+  defp apply_policies(children_pids, policies) do
+    apply_policies(children_pids, policies, [])
+  end
+
+  defp apply_policies(children_pids, policies, messages) do
+    case policies do
+      [policy | tail] ->
+        apply_policies(
+          children_pids,
+          tail,
+          [policy.apply(children_pids) | messages]
+        )
+      [] ->
+        messages
+    end
+  end
+
+  defp send_messages(messages, pids) do
+    case messages do
+      [message | tail] when message == {:error, :no_story} ->
+        IO.puts "-> Skipping empty message"
+        send_messages(tail, pids)
+      [message | tail] ->
+        IO.puts "-> Sending a message"
+        IO.inspect message
+        hipchat_status = GenServer.call(
+          pids.hipchat_pid,
+          {:post, Disorganizer.Services.Hipchat, message.html}
+        )
+        send_messages(tail, pids)
+      [] ->
+        {:ok}
+    end
   end
 
 end

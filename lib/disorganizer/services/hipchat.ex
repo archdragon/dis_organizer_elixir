@@ -11,15 +11,15 @@ defmodule Disorganizer.Services.Hipchat do
     "https://api.hipchat.com/v2/room/" <> room.id <> "/notification?auth_token=" <> room.auth_token
   end
 
-  def options(message) do
+  def options(message_html) do
     color = "gray"
     [
       body: "
         {
         \"from\": \"Friendly Reminder Bot\",
-        \"message\": \"" <> message.text <> " \",
+        \"message\": \"" <> message_html <> " \",
         \"color\": \"" <> color <> "\",
-        \"message_format\": \"" <> message.format <> "\"
+        \"message_format\": \"html\"
         }
       ",
      headers: ["Content-Type": "application/json"]

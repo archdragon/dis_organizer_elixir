@@ -1,7 +1,7 @@
 defmodule Disorganizer.Services.Rollbar do
   use Application
 
-  def url do
+  def url(settings) do
     url_deploy()
   end
 
