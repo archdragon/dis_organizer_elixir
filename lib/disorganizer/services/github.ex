@@ -2,15 +2,23 @@ defmodule Disorganizer.Services.Github do
   use Application
   use Calendar
 
-  def url(settings) do
+  def url(_) do
     repo_addr = Application.get_env(:disorganizer, :github_repo_addr)
-    "https://api.github.com/repos/" <> repo_addr <> "/pulls"
+    "https://api.github.com/repos/" <> repo_addr <> "/issues"
+  end
+
+  def options(_) do
+    options()
   end
 
   def options do
     auth_token = Application.get_env(:disorganizer, :github_auth_token)
     user_agent = Application.get_env(:disorganizer, :github_user_agent)
     [headers: ["Authorization": "token " <> auth_token, "User-Agent": user_agent]]
+  end
+
+  def collection(response) do
+    Poison.Parser.parse!(response.body)
   end
 
   def to_html(response) do

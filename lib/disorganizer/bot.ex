@@ -47,9 +47,11 @@ defmodule Disorganizer.Bot do
 
     pids
     |> apply_policies([
-      Disorganizer.Policies.OldStories
+      Disorganizer.Policies.OldStories,
+      Disorganizer.Policies.MissingPlusOnes
     ])
-    |> send_messages(pids)
+    |> select_message
+    |> send_message(pids)
 
     # message2 = GenServer.call(github_pid, {:get, Disorganizer.Services.Github})
     # message3 = GenServer.call(rollbar_pid, {:get, Disorganizer.Services.Rollbar})
@@ -87,14 +89,23 @@ defmodule Disorganizer.Bot do
       [message | tail] ->
         IO.puts "-> Sending a message"
         IO.inspect message
-        hipchat_status = GenServer.call(
-          pids.hipchat_pid,
-          {:post, Disorganizer.Services.Hipchat, message.html}
-        )
+
+        send_message(message, pids)
         send_messages(tail, pids)
       [] ->
         {:ok}
     end
+  end
+
+  defp select_message(messages) do
+    Enum.random messages
+  end
+
+  defp send_message(message, pids) do
+    hipchat_status = GenServer.call(
+      pids.hipchat_pid,
+     {:post, Disorganizer.Services.Hipchat, message.html}
+    )
   end
 
 end
