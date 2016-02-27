@@ -2,7 +2,8 @@ defmodule Disorganizer.Bot do
   use Application
   use GenServer
   import Supervisor.Spec
-  @interval 10 * 60 * 1000
+  @loop_interval 1000
+  @run_every 60 * 60 * 2
 
   def init(_) do
     {:ok, []}
@@ -21,12 +22,26 @@ defmodule Disorganizer.Bot do
 
     bot_link = GenServer.start_link(__MODULE__, [], [])
 
-    run(super_pid)
+    run(super_pid, @run_every + 1)
 
     bot_link
   end
 
-  defp run(super_pid) do
+  defp run(super_pid, seconds_since_last_message) do
+    case seconds_since_last_message do
+      _ when seconds_since_last_message >= @run_every ->
+        IO.puts "-> Performing a full run"
+        full_run(super_pid)
+        :timer.sleep(@loop_interval)
+        run(super_pid, 0)
+      _ ->
+        # IO.puts "-> Too early to run, waiting..."
+        :timer.sleep(@loop_interval)
+        run(super_pid, (seconds_since_last_message + @loop_interval/1000.0))
+    end
+  end
+
+  defp full_run(super_pid) do
     IO.puts "Running main bot loop..."
 
     [
@@ -59,9 +74,6 @@ defmodule Disorganizer.Bot do
     # hipchat_status = GenServer.call(hipchat_pid, {:post, Disorganizer.Services.Hipchat, message2})
     # slack_status = GenServer.call(slack_pid, {:post, Disorganizer.Services.Slack, message2})
 
-    :timer.sleep(@interval)
-
-    run(super_pid)
   end
 
   defp apply_policies(children_pids, policies) do
