@@ -24,7 +24,7 @@ defmodule Disorganizer.Policies.OldStories do
   end
 
   defp parse(single_message) do
-    title = "Found old finished story"
+    title = "Found old, finished story - maybe we should deliver it?"
     name = single_message["name"]
     url = single_message["url"]
     story_id_name = "#" <> to_string(single_message["id"])
@@ -39,7 +39,7 @@ defmodule Disorganizer.Policies.OldStories do
   defp fetch_settings do
     %{
       url_type: :project,
-      filter: "state:finished%20created:-100weeks..-1weeks",
+      filter: "state:finished%20updated:-100weeks..-1weeks",
       limit: "15"
     }
   end
